@@ -3,6 +3,8 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
+const querystring = require('querystring');
+
 function Contact() {
   const {
     register,
@@ -13,16 +15,45 @@ function Contact() {
 
   const onSubmit = async (data) => {
     const userInfo = {
-      name: data.name,
-      email: data.email,
+      full_name: data.name,
+      email_address: data.email,
       message: data.message,
     };
+
+    const stringData = new URLSearchParams({
+      full_name: userInfo.full_name,
+      email_address: userInfo.email,
+      message: userInfo.message,
+    })
+  
+    console.log(userInfo)
     try {
-      await axios.post("https://getform.io/f/zbxdlvmb", userInfo);
-      toast.success("Your message has been sent");
+      // await axios.post("https://getform.io/f/zbxdlvmb", userInfo);
+
+
+      let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'http://localhost:3000/submitContact',
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        data : userInfo
+      };
+      
+       await axios.request(config)
+      .then((response) => {
+        toast.success("Your message has been sent", JSON.stringify(response));
+        console.log(JSON.stringify(response.data));
+      })
+      .catch((error) => {
+        console.log(error);
+        toast.error("Something went wrong"+ error);
+      });
+     
     } catch (error) {
       console.log(error);
-      toast.error("Something went wrong");
+      toast.error("Something went wrong"+ error);
     }
   };
   return (
@@ -35,23 +66,23 @@ function Contact() {
         <span>Please fill out the form below to contact me</span>
         <div className=" flex flex-col items-center justify-center mt-5">
           <form
-            onSubmit={handleSubmit(onSubmit)}
-            // action="https://getform.io/f/raeqjora"
-            // method="POST"
+           onSubmit={handleSubmit(onSubmit)}
+            action="http://localhost:3000/submitContact"
+            method="POST"
             className="bg-slate-200 w-96 px-8 py-6 rounded-xl"
           >
             <h1 className="text-xl font-semibold mb-4">Send Your Message</h1>
             <div className="flex flex-col mb-4">
               <label className="block text-gray-700">FullName</label>
               <input
-                {...register("name", { required: true })}
+               {...register("name", { required: true })}
                 className="shadow rounded-lg appearance-none border  py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 id="name"
-                name="name"
+               name="name"
                 type="text"
                 placeholder="Enter your fullname"
               />
-              {errors.name && <span>This field is required</span>}
+            {errors.name && <span>This field is required</span>}
             </div>
             <div className="flex flex-col mb-4">
               <label className="block text-gray-700">Email Address</label>
@@ -71,7 +102,7 @@ function Contact() {
                 {...register("message", { required: true })}
                 className="shadow rounded-lg appearance-none border  py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 id="message"
-                name="message"
+               name="message"
                 type="text"
                 placeholder="Enter your Query"
               />
